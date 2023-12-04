@@ -1,10 +1,10 @@
-import { Component } from "../../framework/component.ts";
+import { BaseComponent } from "../../framework/component.ts";
 import { Render } from "../../../common/render.ts";
 import { CONSTANTS } from "../../../common/constants.ts";
 import { Path, StudentData } from "../../../common/interfaces.ts";
 
-export class SketchPad extends Component {
-  public templatePath = 'sketchpad/sketchpad.component.html';
+export class SketchPad extends BaseComponent {
+  public override templatePath = 'sketchpad/sketchpad.component.html';
   public instructions: string = 'Initial value for instructions';
 
   public nextButton!: HTMLButtonElement;

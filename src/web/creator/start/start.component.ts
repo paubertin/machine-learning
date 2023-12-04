@@ -1,7 +1,7 @@
-import { Component } from "../../framework/component.ts";
+import { BaseComponent } from "../../framework/component.ts";
 
-export class StartComponent extends Component {
-  public templatePath = 'start/start.component.html';
+export class StartComponent extends BaseComponent {
+  public override templatePath = 'start/start.component.html';
 
   public startButton!: HTMLButtonElement;
 

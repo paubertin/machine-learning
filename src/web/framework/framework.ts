@@ -1,9 +1,9 @@
 // Framework.ts
-import { Component } from './component.ts';
+import { BaseComponent } from './component.ts';
 
 export class Framework {
   private rootElement: HTMLElement;
-  private components: Map<string, Component> = new Map(); // Map pour stocker les composants
+  private components: Map<string, BaseComponent> = new Map(); // Map pour stocker les composants
 
   constructor(rootId: string) {
     const rootElement = document.getElementById(rootId);
@@ -13,7 +13,7 @@ export class Framework {
     this.rootElement = rootElement;
   }
   
-  async addComponent(component: Component, componentName: string) {
+  async addComponent(component: BaseComponent, componentName: string) {
     const templatePath = component.templatePath;
     try {
       const response = await fetch(templatePath);

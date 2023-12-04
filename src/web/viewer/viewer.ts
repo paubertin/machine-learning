@@ -2,12 +2,19 @@ import { Framework } from "../framework/framework.ts";
 import { samples } from '../../common/js-objects/samples.js';
 import '../styles.css';
 import { Utils } from "../../common/utils.ts";
-import { Component } from "../framework/component.ts";
+import { BaseComponent } from "../framework/component.ts";
 import { createRow } from "../utils/display.ts";
+import { Inject } from "../framework/injection.ts";
+import { DataService } from "./service.ts";
 
-class ViewerComponent extends Component {
-  public templatePath = 'viewer.component.html';
+class ViewerComponent extends BaseComponent {
+  public override templatePath = 'viewer.component.html';
   public container!: HTMLDivElement;
+
+  public constructor(
+  ) {
+    super();
+  }
 
   protected override async onInit(data?: Record<string, any>) {
     this.container = document.getElementById('container') as HTMLDivElement;
