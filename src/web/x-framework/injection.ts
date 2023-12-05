@@ -5,7 +5,7 @@ const injectableMetadataKey = 'injectable';
 class DIContainer {
   public providers: Map<string, any> = new Map();
 
-  public resolve (token: string) {
+  public resolve(token: string) {
     const provider = this.providers.get(token);
     if (provider) {
       return provider;
@@ -45,31 +45,30 @@ interface Type<T> {
 export class Injector extends Map {
 
   public resolve<T>(target: Type<any>): T {
-    console.log('reflect', Reflect.getMetadataKeys(target), target);
-      const tokens = Reflect.getMetadata('design:paramtypes', target) || [];
-      const injections = tokens.map((token: Type<any>) => this.resolve<any>(token));
+    const tokens = Reflect.getMetadata('design:paramtypes', target) || [];
+    const injections = tokens.map((token: Type<any>) => this.resolve<any>(token));
 
-      const classInstance = this.get(target);
-      if (classInstance) {
-          return classInstance;
-      }
+    const classInstance = this.get(target);
+    if (classInstance) {
+      return classInstance;
+    }
 
-      const newClassInstance = new target(...injections);
-      this.set(target, newClassInstance);
+    const newClassInstance = new target(...injections);
+    this.set(target, newClassInstance);
 
-      console.log(`DI-Container created class ${newClassInstance.constructor.name}`);
+    console.log(`DI-Container created class ${newClassInstance.constructor.name}`);
 
-      return newClassInstance;
+    return newClassInstance;
   }
 
   public release(): void {
-      for (const value of this.values()) {
-          if (typeof value['release'] === 'function') {
-              value['release']();
-          }
+    for (const value of this.values()) {
+      if (typeof value['release'] === 'function') {
+        value['release']();
       }
+    }
 
-      this.clear();
+    this.clear();
   }
 }
 

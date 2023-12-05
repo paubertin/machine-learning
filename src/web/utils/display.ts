@@ -1,6 +1,7 @@
 import { Sample } from "../../common/interfaces";
+import { Chart } from "../viewer/chart/chart";
 
-export async function createRow (container: HTMLElement, studentName: string, samples: Sample[]) {
+export async function createRow(container: HTMLElement, studentName: string, samples: Sample[], chart: Chart) {
   const row = document.createElement('div');
   row.classList.add('row');
   container.appendChild(row);
@@ -15,7 +16,7 @@ export async function createRow (container: HTMLElement, studentName: string, sa
 
     const sampleContainer = document.createElement('div');
     sampleContainer.id = `sample_${id}`;
-    sampleContainer.onclick = () => handleClick(sample, false);
+    sampleContainer.onclick = () => handleClick(chart, sample, false);
     sampleContainer.classList.add('sampleContainer');
 
     const sampleLabel = document.createElement('div');
@@ -31,22 +32,28 @@ export async function createRow (container: HTMLElement, studentName: string, sa
   }
 }
 
-function handleClick (sample: Sample, doScroll: boolean = true) {
-  const elt = document.getElementById(`sample_${sample.id}`);
-  let emphasized: boolean = false;
-  if (elt?.classList.contains('emphasize')) {
-    emphasized = true;
-  }
-  [...document.querySelectorAll('.emphasize')]
-    .forEach((elt) => elt.classList.remove('emphasize'));
-  if (emphasized) {
+export function handleClick(chart: Chart, sample?: Required<Sample> | Sample, doScroll: boolean = true) {
+  if (!sample) {
+    [...document.querySelectorAll('.emphasize')].
+      forEach((e) => e.classList.remove('emphasize'));
     return;
   }
-  elt?.classList.add('emphasize');
-  if (doScroll) {
-    elt?.scrollIntoView({
-      behavior: 'auto',
-      block: 'center',
-    })
+  const el = document.getElementById(
+    'sample_' + sample.id
+  );
+  if (el?.classList.contains("emphasize")) {
+    el.classList.remove("emphasize");
+    chart.selectSample(undefined);
+    return;
   }
+  [...document.querySelectorAll('.emphasize')].
+    forEach((e) => e.classList.remove('emphasize'));
+  el?.classList.add("emphasize");
+  if (doScroll) {
+    el?.scrollIntoView({
+      behavior: 'auto',
+      block: 'center'
+    });
+  }
+  chart.selectSample(sample.id);
 }

@@ -1,7 +1,7 @@
 import { BaseComponent } from "../../framework/component.ts";
 import { Render } from "../../../common/render.ts";
 import { CONSTANTS } from "../../../common/constants.ts";
-import { Path, StudentData } from "../../../common/interfaces.ts";
+import { Path, Point, StudentData } from "../../../common/interfaces.ts";
 
 export class SketchPad extends BaseComponent {
   public override templatePath = 'sketchpad/sketchpad.component.html';
@@ -21,7 +21,7 @@ export class SketchPad extends BaseComponent {
 
   public data!: StudentData;
 
-  private _mousePosition: [number, number] | null = null;
+  private _mousePosition: Point | null = null;
 
   public labels = [
     'car',

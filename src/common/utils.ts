@@ -1,3 +1,5 @@
+import { Styles } from "./interfaces";
+
 function printProgress(count: number, max: number) {
   process.stdout.clearLine(0);
   process.stdout.cursorTo(0);
@@ -22,7 +24,7 @@ function groupBy<T extends Record<string, any>>(arr: T[], key: keyof T) {
   return groups;
 }
 
-const styles = {
+const styles: Styles = {
   car: { color: 'gray', text: '🚗' },
   fish: { color: 'red', text: '🐠' },
   house: { color: 'yellow', text: '🏠' },

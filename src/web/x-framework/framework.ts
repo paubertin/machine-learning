@@ -129,7 +129,6 @@ export class Framework {
   }
 
   public registerService (service: Constructable<any>) {
-    console.log('keys', service.name, Reflect.getMetadataKeys(service));
     const dependencies: string[] = Reflect.getMetadata('design:paramtypes', service) || [];
     const instances = dependencies.map((depName: any) => this.services.get(depName.name)?.instance);
 

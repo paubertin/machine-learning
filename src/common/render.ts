@@ -1,4 +1,6 @@
-function renderPath (ctx: any, path: [number, number][], color: string = 'black') {
+import { Path } from "./interfaces";
+
+function renderPath (ctx: any, path: Path, color: string = 'black') {
   ctx.strokeStyle = color;
   ctx.lineWidth = 3;
   ctx.beginPath();
@@ -11,7 +13,7 @@ function renderPath (ctx: any, path: [number, number][], color: string = 'black'
   ctx.stroke();
 }
 
-function renderPaths (ctx: any, paths: [number, number][][], color: string = 'black') {
+function renderPaths (ctx: any, paths: Path[], color: string = 'black') {
   for (const path of paths) {
     renderPath(ctx, path, color);
   }

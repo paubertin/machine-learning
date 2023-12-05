@@ -4,9 +4,9 @@ type BindingRecord = Record<string, Set<string>>;
 
 export abstract class BaseComponent {
   protected app!: Framework;
-  public readonly templatePath: string = '';
+  public abstract readonly templatePath: string;
   protected templateContent: string = '';
-  protected children: BaseComponent[] = [];
+  protected children: { top: BaseComponent[]; bottom: BaseComponent[] } = { top: [], bottom: [] };
   private bindings: BindingRecord = {}; // Enregistre les liens entre attributs et éléments
 
   protected async onInit (data: Record<string, any> = {}) {};
@@ -73,21 +73,36 @@ export abstract class BaseComponent {
     this.templateContent = content;
   }
 
-  addChild(child: BaseComponent): void {
-    this.children.push(child);
+  addChild(child: BaseComponent, position: 'top' | 'bottom' = 'bottom'): void {
+    if (position === 'top') {
+      this.children.top.unshift(child);
+    }
+    else {
+      this.children.bottom.push(child);
+    }
   }
 
-  renderChildren(): string {
-    return this.children.map(child => child.render()).join('');
+  renderTopChildren(): string {
+    return this.children.top.map(child => child.render()).join('');
+  }
+
+  renderBottomChildren(): string {
+    return this.children.top.map(child => child.render()).join('');
   }
 
   render(): string {
-    return this.templateContent + this.renderChildren(); // Utilisation du templateContent dans le rendu du composant
+    return this.renderTopChildren() + this.templateContent + this.renderBottomChildren(); // Utilisation du templateContent dans le rendu du composant
   }
 
   public async init(data?: Record<string, any>) {
     await this.onInit(data);
     this.bindEvents();
     this.bindInputs();
+    for (const child of this.children.top) {
+      await child.init();
+    }
+    for (const child of this.children.bottom) {
+      await child.init();
+    }
   } 
 }
