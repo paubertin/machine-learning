@@ -188,7 +188,7 @@ class BaseComponent extends HTMLElement {
     allElements.forEach((element) => {
       const eventAttributes = Array.from(element.attributes)
         .filter(attr => attr.name.startsWith('(') && attr.name.endsWith(')'));
-      console.log('eventAttributes', eventAttributes);
+      // console.log('eventAttributes', eventAttributes);
       eventAttributes.forEach((attr) => {
         const eventName = attr.name.slice(1, -1); // Récupérer le nom de l'événement sans les parenthèses
         const codeToExecute = attr.value; // Récupérer le code à exécuter
@@ -202,11 +202,10 @@ class BaseComponent extends HTMLElement {
 
         const functionBody = `
 ${strings.join(';\n')}; // Attacher les méthodes au scope global
-debugger;
 ${codeToExecute} // Exécuter le code spécifié
 `;
         const eventHandler = new Function(functionBody).bind(this); // Créer une nouvelle fonction avec le code et les méthodes attachées
-        console.log('event', eventHandler);
+        // console.log('event', eventHandler);
         element.addEventListener(eventName, eventHandler);
       });
     });
@@ -258,8 +257,27 @@ function registerComponent<T extends typeof BaseComponent>(component: T) {
 
 registerComponent(AboutComponent);
 
+@Component({
+  selector: 'input-component',
+  template: 'input.component.html',
+})
+class InputComponent extends BaseComponent {
+
+  public get type () {
+    return this.getAttribute('type')!;
+  }
+
+  public override async connectedCallback() {
+    await super.connectedCallback();
+    const nativeInputElement = this.shadow.querySelector<HTMLInputElement>('input')!;
+    console.log('input el', nativeInputElement);
+    nativeInputElement.setAttribute('type', this.type);
+    
+  }
+}
 
 
+registerComponent(InputComponent);
 
 
 async function main() {
