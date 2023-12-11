@@ -5,7 +5,8 @@
   <div>
     <b>Accuracy</b>
     <br>
-    {{this.correctCount}} / {{this.totalCount}} ({{this.utils.formatPercent(this.correctCount / this.totalCount)}})
+    <!--{{this.correctCount}} / {{this.totalCount}} ({{this.utils.formatPercent(this.correctCount / this.totalCount)}})-->
+    <span>{{Number(this.correctCount / this.totalCount).toFixed(5)}} ({{this.Utils.formatPercent(this.correctCount / this.totalCount)}})</span>
   </div>
 </div>
 <sketchpad-component

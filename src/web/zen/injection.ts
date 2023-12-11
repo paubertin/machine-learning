@@ -22,7 +22,7 @@ export class Injector extends Map<InjectionToken<any>, any> {
       const newClassInstance = new target(...injections);
       this.set(target, newClassInstance);
   
-      console.log(`DI-Container created class ${(newClassInstance as any).constructor.name}`);
+      console.info(`DI-Container created class ${(newClassInstance as any).constructor.name}`);
 
       return newClassInstance;
     }

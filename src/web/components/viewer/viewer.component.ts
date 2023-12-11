@@ -2,7 +2,6 @@ import { Features } from "../../../common/features";
 import { Drawing, Path, Point, Sample, TestingSample } from "../../../common/interfaces";
 import { features } from "../../../common/js-objects/features";
 import { minMax } from "../../../common/js-objects/minMax";
-import { samples } from "../../../common/js-objects/samples";
 import { testing } from "../../../common/js-objects/testing";
 import { training } from "../../../common/js-objects/training";
 import { Utils } from "../../../common/utils";
@@ -35,6 +34,8 @@ export class ViewerComponent extends BaseComponent {
 
   public handleClick = handleClick(this.shadow);
 
+  public Utils = Utils;
+
   public chartOptions: ChartOptions = {
     size: 500,
     axesLabels: features.featureNames,
@@ -59,7 +60,6 @@ export class ViewerComponent extends BaseComponent {
       this.totalCount++;
       this.correctCount += testSample.correct ? 1 : 0;
     }
-    console.log('total', this.totalCount);
 
     const trainingGroups = Utils.groupBy(this.trainingSamples, 'studentId');
     for (let studentId in trainingGroups) {

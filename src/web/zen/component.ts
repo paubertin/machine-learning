@@ -36,26 +36,22 @@ export interface IComponent<T extends BaseComponent = BaseComponent> {
 export class BaseComponent extends HTMLElement {
 
   private static _dependenciesMap?: DependenciesMap;
+
+  public static get metadata() {
+    return Reflect.getMetadata(componentMetadataSymbol, this) as ComponentConfig;
+  }
+
+  public static createDependency<T>(key: InjectionToken<T>, value: PropertyKey, options?: InjectOptions) {
+    this._ensureDependenciesExist();
+    const mapValue: DependenciesMapValue = { property: value, options };
+    this._dependenciesMap!.set(key, mapValue);
+  }
+
   protected template: HTMLTemplateElement;
-
-  private static _eventHandlers: any[] = [];
-
-  private _childrenObserver: MutationObserver;
-
-
   protected dependencyRequester: DependencyRequester;
 
-  protected static _observedAttributes: string[] = [];
-
-  public static get observedAttributes () {
-    return this.metadata.inputs ?? [];
-  }
-
+  private _childrenObserver: MutationObserver;
   private _afterInit: ((component: any) => Promise<void> | void)[] = [];
-
-  public afterInit (cb: (component: typeof this) => Promise<void> | void) {
-    this._afterInit.push(cb);
-  }
 
   public constructor() {
     super();
@@ -63,6 +59,52 @@ export class BaseComponent extends HTMLElement {
     this.template = document.createElement('template');
     this.dependencyRequester = new DependencyRequester(this);
     this._childrenObserver = new MutationObserver(this._childrenObserverCallback);
+  }
+
+  public afterInit (cb: (component: typeof this) => Promise<void> | void) {
+    this._afterInit.push(cb);
+  }
+
+  public get shadow() {
+    return this.shadowRoot!;
+  }
+
+  protected async connectedCallback() {
+    this._childrenObserver.observe(this.shadow, { childList: true });
+
+    await this._getTemplateContent();
+
+    this._bindDependencies();
+    
+    const templateContent = this.template.content.cloneNode(true);
+
+    this._bindContent(templateContent);
+
+    runBinding(this, '*');
+
+    this.render(templateContent);
+
+    this._bindRefs();
+
+    this._bindEvents();
+
+    await this.onInit();
+
+    for (const cb of this._afterInit) {
+      await cb(this);
+    }
+  }
+
+  protected disconnectedCallback() {
+    this._childrenObserver.disconnect();
+  }
+
+  protected adoptedCallback() { }
+
+  protected attributeChangedCallback(_name: string, _oldValue: any, _newValue: any) { }
+
+  protected render(node: Node) {
+    this.shadow.appendChild(node);
   }
 
   private _childrenObserverCallback: MutationCallback = (mutationsList) => {
@@ -120,16 +162,6 @@ export class BaseComponent extends HTMLElement {
     }
   };
 
-  public get shadow() {
-    return this.shadowRoot!;
-  }
-
-  /**
-   * Request a dependency from a component up the tree
-   * @param key the name of the dependency to request
-   * @param options an optional object of options you want the providing component to know, for example if you want a reference to a singleton or a new instance
-   * @return the instance of the requested instance or null if none was found
-   */
   protected requestInstance<T = unknown>(key: InjectionToken<T>, options?: InjectOptions) {
     const value = this.dependencyRequester.requestInstance(key, options);
 
@@ -140,20 +172,8 @@ export class BaseComponent extends HTMLElement {
     return value;
   }
 
-  /**
-     * This is called once a dependency was successfully requested
-     * You can do further stuff with the dependency here
-     * @param value the dependency
-     * @param key the key
-     * @param options the optional options
-     */
-  // @ts-ignore
-  protected receiveDependency<T = unknown>(value: unknown, key: InjectionToken<T>, options?: optionsType) {
+  protected receiveDependency<T = unknown>(_value: unknown, _key: InjectionToken<T>, _options?: InjectOptions) {
     // This is a stub
-  }
-
-  public static get metadata() {
-    return Reflect.getMetadata(componentMetadataSymbol, this) as ComponentConfig;
   }
 
   private static _ensureDependenciesExist(): void {
@@ -168,21 +188,9 @@ export class BaseComponent extends HTMLElement {
     }
   }
 
-  /**
-     * Creates a new dependency
-     * @param key the name of the dependency
-     * @param value the value that will be injected
-     */
-  public static createDependency<T>(key: InjectionToken<T>, value: PropertyKey, options?: InjectOptions) {
-    this._ensureDependenciesExist();
-    const mapValue: DependenciesMapValue = { property: value, options };
-    this._dependenciesMap!.set(key, mapValue);
-  }
-
   protected async onInit (_data?: Record<string, any>) {}
 
-  public async connectedCallback() {
-    this._childrenObserver.observe(this.shadow, { childList: true });
+  private async _getTemplateContent () {
     const metadata = (this.constructor as typeof BaseComponent).metadata;
     try {
       let templateContent: string;
@@ -207,40 +215,17 @@ export class BaseComponent extends HTMLElement {
     catch (error) {
       console.error(error);
     }
+  }
 
+  private _bindDependencies () {
     const ctor = this.constructor as typeof BaseComponent;
     ctor._ensureDependenciesExist();
     ctor._dependenciesMap?.forEach((value, key) => {
       (this as any)[value.property.toString()] = this.requestInstance(key, value.options);
     });
+  }
 
-    ctor._eventHandlers.forEach(({ selector, eventType, propertyKey }) => {
-      const element = this.shadow.querySelector(selector) as HTMLElement | null;
-      element?.addEventListener(eventType, (this[propertyKey as keyof this] as any).bind(this));
-    });
-
-    const elements = this.shadow.querySelectorAll('[events]');
-    elements.forEach((element) => {
-      const eventMappings = element.getAttribute('events');
-      if (eventMappings) {
-        eventMappings.split(',').forEach(mapping => {
-          const [eventType, methodName] = mapping.split(':');
-          const method = (this as any)[methodName.trim()];
-          if (method && typeof method === 'function') {
-            element.addEventListener(eventType.trim(), (event) => method.call(this, event));
-          }
-        });
-      }
-    });
-
-    const inputProperties = Object.getOwnPropertyNames(this)
-      .filter((key) => Reflect.getMetadata('input-property', this, key));
-
-    inputProperties.forEach((prop) => ctor._observedAttributes.push(prop));
-    
-    this.bindContent();
-    await this.render();
-
+  private _bindRefs () {
     const childComponents = Array.from(this.shadow.querySelectorAll('*'));
     const thisCtor = this.constructor;
     const refs: Map<string, ReferenceMetadata> | undefined = Reflect.getMetadata(RefsMetadataKey, thisCtor);
@@ -260,28 +245,11 @@ export class BaseComponent extends HTMLElement {
         }
       }
     });
+  }
 
+  private _bindEvents () {
     const allElements = this.shadow.querySelectorAll<HTMLElement>('*');
     allElements.forEach((element) => {
-      const bindContentAttr = element.getAttribute('bind-content');
-      if (bindContentAttr) {
-        console.log('bindContentAttr', bindContentAttr);
-        console.log('element', element);
-        const expression = parseExpression(bindContentAttr);
-        console.log('expression', expression);
-        const key = expression.paths[0];
-        if (expression.paths.length === 1 && (key in this)) {
-          element.nodeValue = this[key as keyof this] as any;
-          let originalValue = (this[key as keyof this])
-          Object.defineProperty(this, expression.paths[0], {
-            get: () => originalValue,
-            set: (v: any) => {
-              originalValue = v;
-              element.innerHTML = v;
-            },
-          });
-        }
-      }
       const eventAttributes = Array.from(element.attributes)
         .filter(attr => attr.name.startsWith('(') && attr.name.endsWith(')'));
       eventAttributes.forEach((attr) => {
@@ -302,23 +270,10 @@ export class BaseComponent extends HTMLElement {
         });
       });
     });
-
-    await this.onInit();
-    for (const cb of this._afterInit) {
-      await cb(this);
-    }
   }
 
-  protected disconnectedCallback() {
-    this._childrenObserver.disconnect();
-  }
-
-  protected adoptedCallback() { }
-
-  protected attributeChangedCallback(_name: string, _oldValue: any, _newValue: any) { }
-
-  protected bindContent () {
-    const walker = document.createTreeWalker(this.template.content, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT);
+  private _bindContent (content: Node) {
+    const walker = document.createTreeWalker(content, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT);
     let currentNode: Node | null = walker.currentNode;
     while (currentNode) {
       const expression = currentNode.textContent;
@@ -326,24 +281,98 @@ export class BaseComponent extends HTMLElement {
         currentNode = walker.nextNode();
         continue;
       }
-      console.log('currentNode', currentNode);
-      const parsed = parseExpression(expression)
-      console.log('expression', expression, parsed);
-      const raw = expressionToJS(expression);
-      console.log('raw', raw);
-      const fn = createFunction(`return ${raw};`);
-      const res = fn.apply(this);
-      currentNode.nodeValue = typeof res === 'object' ? JSON.stringify(res) : res;
-
+      const parsed = parseExpression(expression);
+      const expressions = parsed.expressions;
+      const functions = expressions.map((exp) => {
+        const raw = expressionToJS(exp);
+        return createFunction('item', `return ${raw};`);
+      });
+      const node = currentNode!;
+      const originalContent = node.nodeValue ?? '';
+      const defaultContext = () => findCtx(node);
+      parsed.paths.forEach((key) => {
+        createBind(this, node, key, (ctx: any = defaultContext()) => {
+          try {
+            let content = originalContent;
+            expressions.forEach((exp, idx) => {
+              const value = functions[idx].call(this, ctx);
+              content = content.replace(exp, String(value)) ?? null;
+            });
+            node.nodeValue = content;
+          }
+          catch (err) {
+            console.error(`Expression error: ${expression}`, err);
+          }
+        });
+      })
       currentNode = walker.nextNode();
     }
   }
 
-  public async render() {
-    this.shadow.appendChild(this.template.content.cloneNode(true));
-  }
-
 }
+
+const bindMap = new WeakMap();
+
+const internals = Symbol('internals');
+const repeatCtx = Symbol('repeatCtx');
+const NOOP = () => void 0;
+
+const findCtx = (t: any) => {
+  while (t && !t[repeatCtx]) {
+    t = t.parentElement;
+  }
+  return t?.[repeatCtx];
+};
+
+function type (o: any, t: 'string' | 'number' | 'bigint' | 'boolean' | 'symbol' | 'undefined' | 'object' | 'function') {
+  return typeof o === t;
+}
+function createBind (source: BaseComponent, target: Node, property: string | symbol, execution?: any) {
+  const propToTarget = bindMap.get(source) || bindMap.set(source, {}).get(source);
+  if (!propToTarget[property]) {
+    const oSet = (Object.getOwnPropertyDescriptor(source, property) || {}).set;
+    let value = source[property as keyof BaseComponent];
+
+    Object.defineProperty(source, property, {
+      get: () => value,
+      set: (v) => {
+        if (v !== value || type(v, 'object')) {
+          value = v;
+          if (oSet) {
+            oSet(v);
+          }
+          runBinding(source, property, value);
+        }
+      },
+    });
+  }
+  (propToTarget[property] = propToTarget[property] || new Set()).add(target);
+  let meta = ((target as any)[internals] = (target as any)[internals] || {});
+  if (type(property, 'symbol')) return NOOP;
+
+  (meta[property] = meta[property] || new Set()).add(execution);
+
+  return () => meta[property].delete(execution);
+}
+
+const runOneBind = (meta: any, property: string | symbol, resolvedValue: any) => {
+  (meta[property] || []).forEach((target: any) => {
+    const value = target[repeatCtx] || resolvedValue;
+    target[internals][property].forEach((fn: any) => fn(value));
+  });
+};
+
+export const runBinding = (source: BaseComponent, property: string | symbol, value?: any) => {
+  let propToTarget = bindMap.get(source) || bindMap.set(source, {}).get(source);
+  if (property !== '*') {
+    runOneBind(propToTarget, property, value);
+  }
+  else {
+    Object.keys(propToTarget).forEach((key) =>
+      runOneBind(propToTarget, key, source[key as keyof BaseComponent])
+    );
+  }
+};
 
 // const expressionToJS = (str: string) => '`' + str.replaceAll('{{', '${').replaceAll('}}', '}') + '`';
 const expressionToJS = (str: string) => str.replaceAll('{{', '').replaceAll('}}', '');
