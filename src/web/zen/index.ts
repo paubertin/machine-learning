@@ -1,5 +1,6 @@
 /// app.ts
 import { BaseComponent, Component, IComponent, registerComponent } from "./component";
+import { PropertyDirective } from "./directives/property.directive";
 import { DependencyResolver, InjectOptions, InjectionToken, injector } from "./injection";
 import { Route, Router } from "./router";
 
@@ -54,7 +55,7 @@ class AppRoot extends BaseComponent {
   }
 }
 
-export function createApplication(containerId: string = 'app') {
+export default function createApplication(containerId: string = 'app') {
   customElements.define(AppRoot.metadata.selector, AppRoot);
   const app = document.createElement(AppRoot.metadata.selector) as AppRoot;
   app.router = injector.resolve(Router);

@@ -1,12 +1,12 @@
 // component.ts
 import 'reflect-metadata';
-import { DependencyRequester, InjectionToken } from './injection';
+import { DependencyRequester, InjectOptions, InjectionToken } from './injection';
 
 const componentMetadataSymbol = Symbol('component-metadata');
 export type DependenciesMap = Map<InjectionToken, DependenciesMapValue>;
 export interface DependenciesMapValue {
   property: PropertyKey;
-  options?: unknown;
+  options?: InjectOptions;
 }
 
 type BaseComponentConfig = {
@@ -34,6 +34,8 @@ export class BaseComponent extends HTMLElement {
   private static _dependenciesMap?: DependenciesMap;
   protected template: HTMLTemplateElement;
 
+  private static _eventHandlers: any[] = [];
+
   protected dependencyRequester: DependencyRequester;
 
   public constructor() {
@@ -55,7 +57,7 @@ export class BaseComponent extends HTMLElement {
    * @param options an optional object of options you want the providing component to know, for example if you want a reference to a singleton or a new instance
    * @return the instance of the requested instance or null if none was found
    */
-  protected requestInstance<O = unknown>(key: string, options?: O) {
+  protected requestInstance<T = unknown>(key: InjectionToken<T>, options?: InjectOptions) {
     const value = this.dependencyRequester.requestInstance(key, options);
 
     if (value !== null) {
@@ -73,7 +75,7 @@ export class BaseComponent extends HTMLElement {
      * @param options the optional options
      */
   // @ts-ignore
-  protected receiveDependency(value: unknown, key: string, options?: optionsType) {
+  protected receiveDependency<T = unknown>(value: unknown, key: InjectionToken<T>, options?: optionsType) {
     // This is a stub
   }
 
@@ -98,10 +100,14 @@ export class BaseComponent extends HTMLElement {
      * @param key the name of the dependency
      * @param value the value that will be injected
      */
-  public static createDependency<T>(key: InjectionToken<T>, value: PropertyKey, options?: unknown) {
+  public static createDependency<T>(key: InjectionToken<T>, value: PropertyKey, options?: InjectOptions) {
     this._ensureDependenciesExist();
     const mapValue: DependenciesMapValue = { property: value, options };
     this._dependenciesMap!.set(key, mapValue);
+  }
+
+  protected async onInit (_data?: Record<string, any>) {
+
   }
 
   public async connectedCallback() {
@@ -130,22 +136,38 @@ export class BaseComponent extends HTMLElement {
     catch (error) {
       console.error(error);
     }
-    console.log('this', this);
 
     const ctor = this.constructor as typeof BaseComponent;
     ctor._ensureDependenciesExist();
     ctor._dependenciesMap?.forEach((value, key) => {
-      // @ts-ignore
-      this[value.property.toString()] = this.requestInstance(key, value.options);
-    })
+      (this as any)[value.property.toString()] = this.requestInstance(key, value.options);
+    });
 
+    ctor._eventHandlers.forEach(({ selector, eventType, propertyKey }) => {
+      const element = this.shadow.querySelector(selector) as HTMLElement | null;
+      element?.addEventListener(eventType, (this[propertyKey as keyof this] as any).bind(this));
+    });
+
+    const elements = this.shadow.querySelectorAll('[events]');
+    elements.forEach((element) => {
+      const eventMappings = element.getAttribute('events');
+      if (eventMappings) {
+        eventMappings.split(',').forEach(mapping => {
+          const [eventType, methodName] = mapping.split(':');
+          const method = (this as any)[methodName.trim()];
+          if (method && typeof method === 'function') {
+            element.addEventListener(eventType.trim(), (event) => method.call(this, event));
+          }
+        });
+      }
+    });
   }
 
   disconnectedCallback() { }
 
   adoptedCallback() { }
 
-  attributeChangedCallback(name: string, oldValue: any, newValue: any) { }
+  attributeChangedCallback(_name: string, _oldValue: any, _newValue: any) { }
 
   public async render() { }
 }

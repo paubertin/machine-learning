@@ -1,5 +1,3 @@
-import { Constructable } from "./framework";
-
 const injectableMetadataKey = 'injectable';
 
 class DIContainer {

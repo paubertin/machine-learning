@@ -8,9 +8,14 @@ const jsonDir = datasetDir + '/json';
 const imgDir = datasetDir + '/img';
 const samplesFile = datasetDir + '/samples.json';
 const features = datasetDir + '/features.json';
+const training = datasetDir + '/training.json';
+const testing = datasetDir + '/testing.json';
 const jsObjects = '/home/scal/dev/machine-learning/src/common/js-objects';
 const samplesJs = jsObjects + '/samples.js';
 const featuresJs = jsObjects + '/features.js';
+const trainingJs = jsObjects + '/training.js';
+const testingJs = jsObjects + '/testing.js';
+const minMaxJs = jsObjects + '/minMax.js';
 
 export const CONSTANTS = {
   canvasWidth,
@@ -25,4 +30,9 @@ export const CONSTANTS = {
   samplesJs,
   features,
   featuresJs,
+  minMaxJs,
+  training,
+  trainingJs,
+  testing,
+  testingJs,
 };

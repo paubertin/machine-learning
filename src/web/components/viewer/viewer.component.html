@@ -1,0 +1,22 @@
+<div id="controlPanel">
+  <button (click)="this.toggleInput()">Toggle input</button>
+  <button (click)="this.scrollToTop()">Scroll to top</button>
+  <button (click)="this.scrollToBottom()">Scroll to bottom</button>
+  <div>
+    <b>Accuracy</b>
+    <br>
+    {{this.correctCount}} / {{this.totalCount}} ({{this.utils.formatPercent(this.correctCount / this.totalCount)}})
+  </div>
+</div>
+<sketchpad-component
+  [onUpdate]="{{this.onUpdate}}"
+  id="sketchpad">
+  <div slot="header" id="predictedLabel" style="color: white; font-size: 30px; outline: initial;">Header</div>
+</sketchpad-component>
+<chart-component
+  id="chart"
+  [options]="{{this.chartOptions}}"
+  [clickchart]="{{this.handleClick}}"
+  [samples]="{{this.trainingSamples}}">
+</chart-component>
+<div id="container"></div>

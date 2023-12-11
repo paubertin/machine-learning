@@ -1,0 +1,14 @@
+<slot name="header"></slot>
+<!--
+
+  <div id="instructions"></div>
+  <button id="next" style="margin-bottom: 1em;">NEXT</button>
+  <br>
+-->
+<div id="sketchPadContainer">
+  <canvas id="canvas"></canvas>
+  <br>
+  <button id="undo" (click)="this.undo()">UNDO</button>
+  <button id="clear" (click)="this.clear()">CLEAR</button>
+</div>
+<slot name="footer"></slot>

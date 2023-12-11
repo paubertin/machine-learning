@@ -2,9 +2,10 @@ import { AboutComponent } from "./components/about/about.component";
 import { HomeComponent } from "./components/home/home.component";
 import { InputComponent } from "./components/input/input.component";
 import { createApplication } from "./core/app";
-import { Router, Service } from "./core/router";
+import { Router } from "./core/router";
 
 async function main() {
+  console.log('MAIN');
   const app = createApplication();
 
   app
@@ -14,7 +15,6 @@ async function main() {
       InputComponent,
     ])
     .declareProviders([
-      Service,
       Router,
     ])
     .declareRoutes([

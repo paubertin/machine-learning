@@ -22,7 +22,7 @@ export function Injectable (): ClassDecorator {
 
 
 export function Inject(serviceName: string) {
-  return function(target: any, propertyKey: string | symbol, parameterIndex: number) {
+  return function(target: any, _propertyKey: string | symbol, parameterIndex: number) {
     const constructor = target.constructor;
     const existingInjectionMetadata = Reflect.getOwnMetadata('injections', constructor) || [];
 

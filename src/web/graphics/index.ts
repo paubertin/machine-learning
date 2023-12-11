@@ -1,4 +1,4 @@
-import { Drawing, Point, Styles, StylesWithImages } from "../../../common/interfaces";
+import { Drawing, Point, Styles, StylesWithImages } from "../../common/interfaces";
 
 function drawPoint(ctx: CanvasRenderingContext2D, loc: Point, color: string | CanvasGradient | CanvasPattern = 'black', size: number = 8) {
   ctx.beginPath();

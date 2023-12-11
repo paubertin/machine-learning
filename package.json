@@ -8,16 +8,19 @@
   "scripts": {
     "test": "vite --config test.config.ts",
     "creator": "vite --config creator.config.ts",
-    "viewer": "vite --config viewer.config.js",
-    "generate": "yarn ts-node-esm ./src/scripts/dataset.generator.ts",
-    "extract": "yarn ts-node-esm ./src/scripts/feature.extractor.ts",
+    "viewer": "vite --config viewer.config.ts",
+    "generate": "yarn ts-node ./src/scripts/dataset.generator.ts",
+    "extract": "yarn ts-node ./src/scripts/feature.extractor.ts",
     "build": "tsc && vite build",
+    "build:test": "tsc && vite build --config test.config.ts",
     "preview": "vite preview"
   },
   "devDependencies": {
     "@types/node": "^20.10.3",
     "reflect-metadata": "^0.1.13",
     "rollup-plugin-swc3": "^0.10.4",
+    "sass": "^1.69.5",
+    "ts-node": "^10.9.2",
     "typescript": "^5.3.2",
     "vite": "^5.0.4"
   },

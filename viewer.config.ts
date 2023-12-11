@@ -2,8 +2,8 @@ import { defineConfig } from 'vite';
 import swc from "rollup-plugin-swc3";
 
 export default defineConfig({
-  root: './src/web/x-web',
-  publicDir: '../../../data/dataset/img/',
+  root: './src/web/',
+  publicDir: '../../data/dataset/img/',
   build: {
     outDir: './dist',
   },

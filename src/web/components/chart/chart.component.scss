@@ -1,0 +1,20 @@
+button {
+  cursor: pointer;
+  border: none;
+  padding: 5px 10px 5px 10px;
+  margin: 5px 10px 5px 10px;
+  height: 36px;
+  border-radius: 5px;
+  background-color: navy;
+  color: white;
+}
+
+button:hover {
+  background-color: mediumblue;
+}
+
+button:disabled,
+button:disabled:hover {
+  background-color: gray;
+  cursor: default;
+}

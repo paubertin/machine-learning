@@ -5,6 +5,7 @@
     "module": "Node16",
     "rootDir": "src",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "outDir": "dist",
     "skipLibCheck": true,
     "experimentalDecorators": true,
 

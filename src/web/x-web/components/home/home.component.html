@@ -2,6 +2,7 @@
   <h1>Contenu de patrimoine</h1>
   <input-component type="tel"></input-component>
   <input type="text" model="value"/>
-  <input type="number" model="num">
-  <button class="btn" id="navigate">Suivre</button>
+  <input type="number" model="num" (click)="handleClick()">
+  <button class="btn" id="navigate" (click)="handleClick(event)">Suivre</button>
+  <button class="btn" id="test" events="click: navigate, mouseenter: onMouseEnter">Test</button>
 </div>

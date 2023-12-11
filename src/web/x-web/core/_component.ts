@@ -158,7 +158,7 @@ ${codeToExecute} // Exécuter le code spécifié
 
   adoptedCallback() { }
 
-  attributeChangedCallback(name: string, oldValue: any, newValue: any) { }
+  attributeChangedCallback(_name: string, _oldValue: any, _newValue: any) { }
 
   public async render() { }
 }

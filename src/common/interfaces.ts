@@ -15,7 +15,18 @@ export interface Sample {
   label: string;
   studentName: string;
   studentId: number;
-  point?: [ number, number ];
+  point?: number[];
+  correct?: boolean;
+}
+
+export interface TestingSample {
+  id: number;
+  label: string;
+  truth: string;
+  studentName: string;
+  studentId: number;
+  point: number[];
+  correct?: boolean;
 }
 
 export enum Drawing {
@@ -27,6 +38,7 @@ export enum Drawing {
   'guitar' = 'guitar',
   'pencil' = 'pencil',
   'clock' = 'clock',
+  '?' = '?',
 }
 
 export type Styles = Record<keyof typeof Drawing, { color: string; text: string; image?: HTMLImageElement }>;

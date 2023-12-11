@@ -25,7 +25,7 @@ export abstract class BaseComponent {
   protected templateContent: string = '';
   protected children: BaseComponent[] = [];
 
-  protected async onInit (data: Record<string, any> = {}) {}; // à surchager pour définir l'initialisation du composant
+  protected async onInit (_data: Record<string, any> = {}) {}; // à surchager pour définir l'initialisation du composant
 
   setTemplateContent(content: string): void {
     this.templateContent = content;

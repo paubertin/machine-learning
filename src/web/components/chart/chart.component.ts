@@ -1,6 +1,8 @@
 import { Bounds, Drawing, Point, Sample, StylesWithImages } from '../../../common/interfaces';
-import { Graphics } from './graphics';
-import { math } from './math';
+import { Graphics } from '../../graphics';
+import { math } from '../../math';
+import { BaseComponent, Component } from '../../zen/component';
+import { Input, Ref } from '../../zen/decorators';
 
 export interface ChartOptions {
   size: number;
@@ -9,13 +11,33 @@ export interface ChartOptions {
   transparency?: number;
   icon: string;
 }
+@Component({
+  selector: 'chart-component',
+  templateUrl: 'components/chart/chart.component.html',
+  styles: 'components/chart/chart.component.scss'
+})
+export class ChartComponent extends BaseComponent {
+  @Ref('chart-container')
+  public chartContainer!: HTMLDivElement;
 
-export class Chart {
-  public samples: Required<Sample>[];
-  public options: ChartOptions;
-  public onClick?: (chart: Chart, sample?: Required<Sample>) => void;
-  public canvas: HTMLCanvasElement;
-  public ctx: CanvasRenderingContext2D;
+  @Input()
+  public samples: Required<Sample>[] = [];
+
+  @Input()
+  public options!: ChartOptions;
+
+  @Input()
+  public clickchart?: (chart: ChartComponent, sample?: Required<Sample>) => void;
+
+  public canvas!: HTMLCanvasElement;
+
+  public dynamicCanvas!: HTMLCanvasElement;
+
+  public ctx!: CanvasRenderingContext2D;
+
+  public dynamicCtx!: CanvasRenderingContext2D;
+
+  private drawingDynamic: boolean = false;
 
   private get _transparency() {
     return this.options.transparency ?? 1;
@@ -57,25 +79,16 @@ export class Chart {
       dragging: false
     };
 
-  private _hoveredSample: Required<Sample> | undefined = undefined;
-  private _selectedSample: Required<Sample> | undefined = undefined;
-  private _pixelBounds: Bounds;
-  private _dataBounds: Bounds;
-  private _defaultDataBounds: Bounds;
+  private _hoveredSample?: Required<Sample> = undefined;
+  private _selectedSample?: Required<Sample> = undefined;
+  private _nearestSamples?: Required<Sample>[] = undefined;
+  private _pixelBounds!: Bounds;
+  private _dataBounds!: Bounds;
+  private _defaultDataBounds!: Bounds;
+  private _dynamicPoint?: { point: Point; label: keyof typeof Drawing } = undefined;
 
-  public constructor(container: HTMLElement, samples: Required<Sample>[], options: ChartOptions, onClick?: (chart: Chart, sample?: Required<Sample>) => void) {
-    this.samples = samples;
-    this.options = options;
-    this.onClick = onClick;
-
-    this.canvas = document.createElement('canvas');
-    this.canvas.width = options.size;
-    this.canvas.height = options.size;
-    this.canvas.style.backgroundColor = 'white';
-    container.appendChild(this.canvas);
-
-    this.ctx = this.canvas.getContext('2d')!;
-
+  public override async onInit(_data?: Record<string, any> | undefined) {
+    this._createCanvas();
     this._pixelBounds = this._getPixelBounds();
     this._dataBounds = this._getDataBounds();
     this._defaultDataBounds = this._getDataBounds();
@@ -85,32 +98,95 @@ export class Chart {
     this._addEventListeners();
   }
 
+  public reset () {
+    this._dataTrans = {
+      offset: [0, 0],
+      scale: 1
+    };
+    this._dragInfo = {
+      start: [0, 0],
+      end: [0, 0],
+      offset: [0, 0],
+      dragging: false
+    };
+    
+    this._updateDataBounds(
+      this._dataTrans.offset,
+      this._dataTrans.scale
+    );
+
+    this._draw();
+  }
+
+  private _createCanvas() {
+    this.canvas = document.createElement('canvas');
+    this.ctx = this.canvas.getContext('2d')!;
+    this.dynamicCanvas = document.createElement('canvas');
+    this.dynamicCtx = this.dynamicCanvas.getContext('2d')!;
+    this.dynamicCanvas.style.position = 'absolute';
+    this.canvas.style.position = 'absolute';
+    this.chartContainer.appendChild(this.canvas);
+    this.chartContainer.appendChild(this.dynamicCanvas);
+    this.chartContainer.style.width = `${this.options?.size ?? 200}px`;
+    this.chartContainer.style.height = `${this.options?.size ?? 200}px`;
+    this.canvas.width = this.options?.size ?? 200;
+    this.canvas.height = this.options?.size ?? 200;
+    this.dynamicCanvas.width = this.options?.size ?? 200;
+    this.dynamicCanvas.height = this.options?.size ?? 200;
+    this.canvas.style.backgroundColor = '#ffffff';
+    this.dynamicCanvas.style.backgroundColor = '#ffffff00';
+  }
+
+  public showDynamicPoint(point: Point, label: keyof typeof Drawing, nearestSamples: Required<Sample>[]) {
+    if (!this.drawingDynamic) {
+      this.drawingDynamic = true;
+      this.options.transparency = 0.1;
+      this._draw();
+    }
+    const isSameAsBefore = math.equals(point, this._dynamicPoint?.point);
+    this._dynamicPoint = { point, label };
+    this._nearestSamples = nearestSamples;
+    if (!isSameAsBefore) {
+      this._drawDynamicPoint();
+    }
+  }
+
+  public hideDynamicPoint() {
+    this._dynamicPoint = undefined;
+    this.drawingDynamic = false;
+    this._nearestSamples = undefined;
+    this.options.transparency = 0.7;
+    this._draw();
+    this._drawDynamicPoint();
+  }
+
   _addEventListeners() {
-    const { canvas, _dataTrans, _dragInfo } = this;
+    const { dynamicCanvas: canvas } = this;
     canvas.onmousedown = (evt) => {
       const dataLoc = this._getMouse(evt, true);
-      _dragInfo.start = dataLoc;
-      _dragInfo.dragging = true;
-      _dragInfo.end = [0, 0];
-      _dragInfo.offset = [0, 0];
-    }
+      this._dragInfo.start = dataLoc;
+      this._dragInfo.dragging = true;
+      this._dragInfo.end = [0, 0];
+      this._dragInfo.offset = [0, 0];
+    };
+
     canvas.onmousemove = (evt) => {
-      if (_dragInfo.dragging) {
+      if (this._dragInfo.dragging) {
         const dataLoc = this._getMouse(evt, true);
-        _dragInfo.end = dataLoc;
-        _dragInfo.offset = math.scale(
+        this._dragInfo.end = dataLoc;
+        this._dragInfo.offset = math.scale(
           math.subtract(
-            _dragInfo.start, _dragInfo.end
+            this._dragInfo.start, this._dragInfo.end
           ),
-          _dataTrans.scale ** 2
+          this._dataTrans.scale ** 2
         );
         const newOffset = math.add(
-          _dataTrans.offset,
-          _dragInfo.offset
+          this._dataTrans.offset,
+          this._dragInfo.offset
         );
         this._updateDataBounds(
           newOffset,
-          _dataTrans.scale
+          this._dataTrans.scale
         );
       }
       const pLoc = this._getMouse(evt);
@@ -118,45 +194,51 @@ export class Chart {
         math.remapPoint(
           this._dataBounds,
           this._pixelBounds,
-          s.point
+          s.point as Point,
         )
       );
-      const index = math.getNearest(pLoc, pPoints);
-      const nearest = this.samples[index];
-      const dist = math.distance(pPoints[index], pLoc);
+      const indices = math.getNearest(pLoc, pPoints);
+      const nearest = this.samples[indices[0]];
+      const dist = math.distance(pPoints[indices[0]], pLoc);
       if (dist < this._margin / 2) {
         this._hoveredSample = nearest;
-      } else {
+      }
+      else {
         this._hoveredSample = undefined;
       }
 
       this._draw();
-    }
+      this._drawDynamicPoint();
+    };
+
     canvas.onmouseup = () => {
-      _dataTrans.offset = math.add(
-        _dataTrans.offset,
-        _dragInfo.offset
+      this._dataTrans.offset = math.add(
+        this._dataTrans.offset,
+        this._dragInfo.offset
       );
-      _dragInfo.dragging = false;
-    }
+      this._dragInfo.dragging = false;
+    };
+
     canvas.onwheel = (evt) => {
       const dir = Math.sign(evt.deltaY);
       const step = 0.02;
-      _dataTrans.scale += dir * step;
-      _dataTrans.scale = Math.max(step,
-        Math.min(2, _dataTrans.scale)
+      this._dataTrans.scale += dir * step;
+      this._dataTrans.scale = Math.max(step,
+        Math.min(2, this._dataTrans.scale)
       );
 
       this._updateDataBounds(
-        _dataTrans.offset,
-        _dataTrans.scale
+        this._dataTrans.offset,
+        this._dataTrans.scale
       );
 
       this._draw();
+      this._drawDynamicPoint();
       evt.preventDefault();
-    }
+    };
+
     canvas.onclick = () => {
-      if (!math.equals(_dragInfo.offset, [0, 0])) {
+      if (!math.equals(this._dragInfo.offset, [0, 0])) {
         return;
       }
       if (this._hoveredSample) {
@@ -170,9 +252,10 @@ export class Chart {
       else {
         this._selectedSample = undefined;
       }
-      this.onClick?.(this, this._selectedSample);
+      this.clickchart?.(this, this._selectedSample);
       this._draw();
-    }
+      this._drawDynamicPoint();
+    };
   }
 
   _updateDataBounds(offset: Point, scale: number) {
@@ -248,6 +331,8 @@ export class Chart {
     const maxX = Math.max(...x);
     const minY = Math.min(...y);
     const maxY = Math.max(...y);
+    const deltaX = maxX - minX;
+    const deltaY = maxY - minY;
     const bounds = {
       left: minX,
       right: maxX,
@@ -258,55 +343,79 @@ export class Chart {
   }
 
   _draw() {
-    const { ctx, canvas } = this;
+    const { ctx: ctx, canvas: canvas } = this;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     ctx.globalAlpha = this._transparency;
-    this._drawSamples(this.samples);
+    this._drawSamples(ctx, this.samples);
     ctx.globalAlpha = 1;
 
     if (this._hoveredSample) {
       this._emphasizeSample(
+        ctx,
         this._hoveredSample
       );
     }
 
     if (this._selectedSample) {
       this._emphasizeSample(
+        ctx,
         this._selectedSample, 'yellow'
       );
     }
 
-    this._drawAxes();
+    this._drawAxes(ctx, canvas);
   }
 
-  selectSample(id?: number) {
+  private _drawDynamicPoint() {
+    const { dynamicCtx: ctx, dynamicCanvas: canvas } = this;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (this._dynamicPoint) {
+      const pixelLoc = math.remapPoint(
+        this._dataBounds,
+        this._pixelBounds,
+        this._dynamicPoint.point,
+      );
+      this._nearestSamples?.forEach((sample) => {
+        ctx.beginPath();
+        ctx.moveTo(...pixelLoc);
+        ctx.lineTo(...math.remapPoint(this._dataBounds, this._pixelBounds, sample.point as Point));
+        ctx.stroke();
+      });
+      Graphics.drawImage(ctx, this._styles[this._dynamicPoint.label].image, pixelLoc);
+    }
+
+  }
+
+  selectSample(sample?: Required<Sample>) {
     this._selectedSample = undefined;
-    if (id !== undefined) {
-      this._selectedSample = this.samples.find((s) => s.id === id);
+    if (sample !== undefined) {
+      this._selectedSample = sample;
     }
     this._draw();
   }
 
-  _emphasizeSample(sample: Required<Sample>, color = 'white') {
+  _emphasizeSample(ctx: CanvasRenderingContext2D, sample: Required<Sample>, color = 'white') {
     const pLoc = math.remapPoint(
       this._dataBounds,
       this._pixelBounds,
-      sample.point
+      sample.point as Point,
     );
-    const grd = this.ctx.createRadialGradient(
+    const grd = ctx.createRadialGradient(
       ...pLoc, 0, ...pLoc, this._margin
     );
     grd.addColorStop(0, color);
     grd.addColorStop(1, 'rgba(255,255,255,0)');
-    Graphics.drawPoint(this.ctx, pLoc, grd, this._margin * 2);
+    Graphics.drawPoint(ctx, pLoc, grd, this._margin * 2);
     this._drawSamples(
+      ctx,
       [sample]
     );
   }
 
-  _drawAxes() {
-    const { ctx, canvas, _axesLabels, _margin } = this;
+  _drawAxes(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) {
+    const { _axesLabels, _margin } = this;
     const { left, right, top, bottom } = this._pixelBounds;
 
     ctx.clearRect(0, 0, this.canvas.width, _margin);
@@ -393,13 +502,11 @@ export class Chart {
     ctx.restore();
   }
 
-  _drawSamples(samples: Required<Sample>[]) {
-    const { ctx, _dataBounds, _pixelBounds } = this;
+  _drawSamples(ctx: CanvasRenderingContext2D, samples: Required<Sample>[]) {
+    const { _dataBounds, _pixelBounds } = this;
     for (const sample of samples) {
       const { point, label } = sample;
-      const pixelLoc = math.remapPoint(
-        _dataBounds, _pixelBounds, point
-      );
+      const pixelLoc = math.remapPoint(_dataBounds, _pixelBounds, point as Point);
       switch (this._icon) {
         case 'image':
           Graphics.drawImage(ctx,

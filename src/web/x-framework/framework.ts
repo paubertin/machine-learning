@@ -25,7 +25,7 @@ interface FrameworkConfig {
 }
 
 export function Config(config: FrameworkConfig) {
-  return function (target: any) {
+  return function () {
     if (!frameworkInstance) {
       frameworkInstance = new Framework(config.rootId);
     }
@@ -38,34 +38,7 @@ export function Config(config: FrameworkConfig) {
   }
 }
 
-class DIContainer {
-  private _providers: Map<string, any> = new Map();
 
-  public resolve (token: string) {
-    const provider = this._providers.get(token);
-    if (provider) {
-      return provider;
-    }
-    else {
-      throw new Error(`No provider found for ${token}`);
-    }
-  }
-}
-
-const container = new DIContainer();
-
-class DependencyInjection {
-  static get<T>(target: any): T {
-    const isInjectable = Reflect.getMetadata("injectable", target);
-    if (!isInjectable) {
-      throw new Error("Target is not injectable");
-    }
-
-    const dependencies = Reflect.getMetadata("design:paramtypes", target) || [];
-    const instances = dependencies.map((dep: any) => DependencyInjection.get(dep));
-    return new target(...instances);
-  }
-}
 
 export class Framework {
   private router: Router = new Router();

@@ -9,7 +9,7 @@ export abstract class BaseComponent {
   protected children: { top: BaseComponent[]; bottom: BaseComponent[] } = { top: [], bottom: [] };
   private bindings: BindingRecord = {}; // Enregistre les liens entre attributs et éléments
 
-  protected async onInit (data: Record<string, any> = {}) {};
+  protected async onInit (_data: Record<string, any> = {}) {};
 
   bindEvents(): void {
     // Méthode vide pour le binding d'événements, à implémenter dans les sous-classes si nécessaire

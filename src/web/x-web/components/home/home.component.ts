@@ -8,33 +8,27 @@ import { Router } from "../../core/router";
   styles: 'components/home/home.component.css',
 })
 export class HomeComponent extends BaseComponent {
-  @Inject('router')
-  private router!: Router;
 
-  public constructor () {
-    super();
-    console.log('HOME CTOR', this);
-  }
+  @Inject()
+  private router!: Router;
 
   public value: string = 'Bonjour';
   public num: number = 0;
 
-  public navigate(...Args: any[]) {
-
-    console.log('args', Args);
-    console.log('Clicked!'); // Fonction de gestion de l'événement
-    console.log('router', this.router);
+  public navigate(event: any) {
+    console.log('event', event);
+    this.router.navigate('/about');
   }
 
   public override async connectedCallback() {
       super.connectedCallback();
-      setTimeout(() => {
-        const btn = this.shadow.getElementById('navigate');
-        console.log('btn', btn);
-        btn?.addEventListener('click', () => {
-          this.router.navigate('/about');
-        })
-      }, 1000);
+  }
 
+  public handleClick (event: any) {
+    console.log('click', event);
+  }
+
+  public onMouseEnter (event: any) {
+    console.log('mouseenter', event);
   }
 }

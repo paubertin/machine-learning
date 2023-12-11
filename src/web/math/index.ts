@@ -1,6 +1,9 @@
-import { Bounds, Point } from "../../../common/interfaces";
+import { Bounds, Point } from "../../common/interfaces";
 
-const equals = (p1: Point, p2: Point) => {
+const equals = (p1?: Point | null, p2?: Point | null) => {
+  if (!p1 || !p2) {
+    return false;
+  }
   return p1[0] === p2[0] && p1[1] === p2[1];
 }
 
@@ -46,7 +49,7 @@ const scale = (p: Point, scaler: number): Point => {
   ];
 }
 
-const distance = (p1: Point, p2: Point) => {
+const distance = (p1: Array<number>, p2: Array<number>) => {
   return Math.sqrt(
     (p1[0] - p2[0]) ** 2 +
     (p1[1] - p2[1]) ** 2
@@ -57,20 +60,21 @@ const formatNumber = (n: number, dec: number = 0) => {
   return n.toFixed(dec);
 }
 
-const getNearest = (loc: Point, points: Point[]) => {
-  let minDist = Number.MAX_SAFE_INTEGER;
-  let nearestIndex = 0;
+const getNearest = (loc: Array<number>, points: Array<number>[], k: number = 1) => {
+  const sorted = points
+    .map((val, idx) => {
+      return {
+        val,
+        idx,
+      };
+    })
+    .sort((a, b) => {
+      return distance(loc, a.val) - distance(loc, b.val);
+    });
+  
+  const indices = sorted.map((o) => o.idx);
 
-  for (let i = 0; i < points.length; i++) {
-    const point = points[i];
-    const d = distance(loc, point);
-
-    if (d < minDist) {
-      minDist = d;
-      nearestIndex = i;
-    }
-  }
-  return nearestIndex;
+  return indices.slice(0, k);
 }
 
 export const math = {
