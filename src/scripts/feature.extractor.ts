@@ -25,14 +25,14 @@ async function extract() {
   const trainingAmount = samples.length * 0.5;
 
   const training: Sample[] = [];
-  const testing: TestingSample[] = [];
+  const testing: Sample[] = [];
 
   for (let i = 0; i < samples.length; ++i) {
     if (i < trainingAmount) {
       training.push(samples[i]);
     }
     else {
-      testing.push({...samples[i], truth: samples[i].label, label: '?' });
+      testing.push(samples[i]);
     }
   }
 
@@ -47,8 +47,8 @@ async function extract() {
         label: s.label,
       };
     })
-  }));
-  await fs.writeFile(CONSTANTS.featuresJs, `export const features = ${JSON.stringify({ featureNames, samples }, undefined, 2)};`);
+  }, undefined, 2));
+  await fs.writeFile(CONSTANTS.featuresTs, `export const features = ${JSON.stringify({ featureNames, samples }, undefined, 2)};`);
 
   await fs.writeFile(CONSTANTS.training, JSON.stringify({
     featureNames,
@@ -58,8 +58,8 @@ async function extract() {
         label: s.label,
       };
     })
-  }));
-  await fs.writeFile(CONSTANTS.trainingJs, `export const training = ${JSON.stringify({ featureNames, samples: training }, undefined, 2)};`);
+  }, undefined, 2));
+  await fs.writeFile(CONSTANTS.trainingTs, `export const training = ${JSON.stringify({ featureNames, samples: training }, undefined, 2)};`);
 
   await fs.writeFile(CONSTANTS.testing, JSON.stringify({
     featureNames,
@@ -69,11 +69,11 @@ async function extract() {
         label: s.label,
       };
     })
-  }));
-  await fs.writeFile(CONSTANTS.testingJs, `export const testing = ${JSON.stringify({ featureNames, samples: testing }, undefined, 2)};`);
+  }, undefined, 2));
+  await fs.writeFile(CONSTANTS.testingTs, `export const testing = ${JSON.stringify({ featureNames, samples: testing }, undefined, 2)};`);
 
 
-  await fs.writeFile(CONSTANTS.minMaxJs, `export const minMax = ${JSON.stringify(minMax, undefined, 2)};`);
+  await fs.writeFile(CONSTANTS.minMaxTs, `export const minMax = ${JSON.stringify(minMax, undefined, 2)};`);
   console.log('Done !');
 }
 

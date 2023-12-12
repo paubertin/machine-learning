@@ -10,6 +10,7 @@
     "creator": "vite --config creator.config.ts",
     "viewer": "vite --config viewer.config.ts",
     "generate": "yarn ts-node ./src/scripts/dataset.generator.ts",
+    "evaluate": "yarn ts-node ./src/scripts/evaluation.ts",
     "extract": "yarn ts-node ./src/scripts/feature.extractor.ts",
     "build": "tsc && vite build",
     "build:test": "tsc && vite build --config test.config.ts",

@@ -54,7 +54,7 @@ async function generateDataset () {
   console.log('\n');
 
   await fs.writeFile(CONSTANTS.samplesFile, JSON.stringify(samples));
-  await fs.writeFile(CONSTANTS.samplesJs, `export const samples = ${JSON.stringify(samples, undefined, 2)};`);
+  await fs.writeFile(CONSTANTS.samplesTs, `export const samples = ${JSON.stringify(samples, undefined, 2)};`);
 
   console.log('Done !');
 }

@@ -1,4 +1,4 @@
-import { Bounds, Point } from "../../common/interfaces";
+import { Bounds, Point } from "./interfaces";
 
 const equals = (p1?: Point | null, p2?: Point | null) => {
   if (!p1 || !p2) {
@@ -50,10 +50,14 @@ const scale = (p: Point, scaler: number): Point => {
 }
 
 const distance = (p1: Array<number>, p2: Array<number>) => {
-  return Math.sqrt(
-    (p1[0] - p2[0]) ** 2 +
-    (p1[1] - p2[1]) ** 2
-  );
+  if (p1.length !== p2.length) {
+    throw new Error('Incompatible dimensions');
+  }
+  let sqDist = 0;
+  for (let i = 0; i < p1.length; ++i) {
+    sqDist += (p2[i] - p1[i])**2;
+  }
+  return sqDist**0.5;
 }
 
 const formatNumber = (n: number, dec: number = 0) => {

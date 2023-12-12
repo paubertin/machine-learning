@@ -1,4 +1,4 @@
-import { math } from "../web/math";
+import { math } from "./math";
 import { Point, Styles } from "./interfaces";
 
 function printProgress(count: number, max: number) {
@@ -81,4 +81,5 @@ export const Utils = {
   groupBy,
   styles,
   normalizePoints,
+  classes: [ 'car', 'fish', 'house', 'tree', 'bicycle', 'guitar', 'pencil', 'clock' ],
 };

@@ -41,5 +41,14 @@ export enum Drawing {
   '?' = '?',
 }
 
+export interface ChartOptions {
+  size: number;
+  axesLabels: string[];
+  styles: StylesWithImages;
+  transparency?: number;
+  icon: string;
+  background?: HTMLImageElement;
+}
+
 export type Styles = Record<keyof typeof Drawing, { color: string; text: string; image?: HTMLImageElement }>;
 export type StylesWithImages = Record<keyof typeof Drawing, { color: string; text: string; image: HTMLImageElement }>;

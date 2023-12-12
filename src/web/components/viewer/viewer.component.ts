@@ -1,17 +1,18 @@
 import { Features } from "../../../common/features";
-import { Drawing, Path, Point, Sample, TestingSample } from "../../../common/interfaces";
-import { features } from "../../../common/js-objects/features";
-import { minMax } from "../../../common/js-objects/minMax";
-import { testing } from "../../../common/js-objects/testing";
-import { training } from "../../../common/js-objects/training";
+import { Path, Point, Sample, TestingSample } from "../../../common/interfaces";
+import { features } from "../../../common/ts-objects/features";
+import { minMax } from "../../../common/ts-objects/minMax";
+import { testing } from "../../../common/ts-objects/testing";
+import { training } from "../../../common/ts-objects/training";
 import { Utils } from "../../../common/utils";
 import { Graphics } from "../../graphics";
 import { createRow, handleClick } from "../../graphics/display";
-import { math } from "../../math";
 import { BaseComponent, Component } from "../../zen/component";
 import { Ref } from "../../zen/decorators";
 import { ChartComponent, ChartOptions } from "../chart/chart.component";
 import { SketchPad } from "../sketchpad/sketchpad.component";
+import { KNN } from "../../../common/classifiers/knn";
+import { Confusion, ConfusionOptions } from "../confusion/confusion.component";
 
 
 @Component({
@@ -22,6 +23,9 @@ import { SketchPad } from "../sketchpad/sketchpad.component";
 export class ViewerComponent extends BaseComponent {
   @Ref('container')
   public container!: HTMLDivElement;
+
+  @Ref('confusion')
+  public confusion!: Confusion;
 
   @Ref('predictedLabel')
   public predictedLabelContainer!: HTMLDivElement;
@@ -36,13 +40,11 @@ export class ViewerComponent extends BaseComponent {
 
   public Utils = Utils;
 
-  public chartOptions: ChartOptions = {
-    size: 500,
-    axesLabels: features.featureNames,
-    styles: Graphics.generateImages(Utils.styles),
-    transparency: 0.8,
-    icon: 'image',
-  };
+  public knn: KNN;
+
+  public chartOptions: ChartOptions;
+
+  public confusionOptions: ConfusionOptions;
 
   public samples = features.samples;
 
@@ -52,9 +54,29 @@ export class ViewerComponent extends BaseComponent {
   public correctCount = 0;
   public totalCount = 0;
 
+  public constructor () {
+    super();
+    this.knn = new KNN(this.trainingSamples, 50);
+    const background = new Image();
+    background.src='/decision_boundary.png';
+
+    this.chartOptions = {
+      size: 500,
+      axesLabels: features.featureNames,
+      styles: Graphics.generateImages(Utils.styles),
+      transparency: 0.8,
+      icon: 'image',
+      background,
+    };
+
+    this.confusionOptions = this.chartOptions;
+  }
+
   protected override async onInit(_data?: Record<string, any>) {
     for (const testSample of this.testingSamples) {
-      const { label } = this.classify(testSample.point);
+      testSample.truth = testSample.label;
+      testSample.label = '?';
+      const { label } = this.knn.predict(testSample.point);
       testSample.label = label;
       testSample.correct = testSample.label === testSample.truth;
       this.totalCount++;
@@ -83,6 +105,10 @@ export class ViewerComponent extends BaseComponent {
       component.style.display = 'none'
       component.style.cssText += 'outline: 10000px solid rgba(0,0,0,0.7);';
     });
+
+    this.confusion.afterInit((component) => {
+      component.style.display = 'none';
+    });
   }
 
   public toggleInput () {
@@ -96,30 +122,22 @@ export class ViewerComponent extends BaseComponent {
     }
   }
 
+  public toggleOutput () {
+    if (this.confusion.style.display === 'none') {
+      this.confusion.style.display = 'block';
+    }
+    else {
+      this.confusion.style.display = 'none';
+    }
+  }
+
   public onUpdate = (paths: Path[]) => {
     const functions = Features.inUse.map((f) => f.function);
     const point = functions.map((f) => f(paths)) as Point;
     Utils.normalizePoints([ point ], minMax);
-    const { label, nearestSamples } = this.classify(point);
+    const { label, nearestSamples } = this.knn.predict(point);
     this.predictedLabelContainer.innerHTML = `Is it a ${label} ?`;
     this.chart.showDynamicPoint(point, label, nearestSamples as any);
-  }
-
-  public classify(point: number[]) {
-    const points = this.trainingSamples.map((s) => s.point) as Point[];
-    const indices = math.getNearest(point, points, 10);
-    const nearestSamples = indices.map((i) => this.trainingSamples[i]);
-    const labels = nearestSamples.map((s) => s.label as keyof typeof Drawing);
-    const counts: { [key: string]: number } = {};
-    for (const label of labels) {
-      counts[label] = counts[label] ? counts[label] + 1 : 1;
-    }
-    const max = Math.max(...Object.values(counts));
-    const label = labels.find((l) => counts[l] === max)!;
-    return {
-      label,
-      nearestSamples,
-    };
   }
 
   public scrollToTop () {

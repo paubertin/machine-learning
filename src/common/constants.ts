@@ -10,12 +10,13 @@ const samplesFile = datasetDir + '/samples.json';
 const features = datasetDir + '/features.json';
 const training = datasetDir + '/training.json';
 const testing = datasetDir + '/testing.json';
-const jsObjects = '/home/scal/dev/machine-learning/src/common/js-objects';
-const samplesJs = jsObjects + '/samples.js';
-const featuresJs = jsObjects + '/features.js';
-const trainingJs = jsObjects + '/training.js';
-const testingJs = jsObjects + '/testing.js';
-const minMaxJs = jsObjects + '/minMax.js';
+const tsObjects = '/home/scal/dev/machine-learning/src/common/ts-objects';
+const samplesTs = tsObjects + '/samples.ts';
+const featuresTs = tsObjects + '/features.ts';
+const trainingTs = tsObjects + '/training.ts';
+const testingTs = tsObjects + '/testing.ts';
+const minMaxTs = tsObjects + '/minMax.ts';
+const decisionBoundary = datasetDir + '/decision_boundary.png';
 
 export const CONSTANTS = {
   canvasWidth,
@@ -26,13 +27,14 @@ export const CONSTANTS = {
   jsonDir,
   imgDir,
   samplesFile,
-  jsObjects,
-  samplesJs,
+  tsObjects,
+  samplesTs,
+  featuresTs,
+  trainingTs,
+  testingTs,
+  minMaxTs,
   features,
-  featuresJs,
-  minMaxJs,
   training,
-  trainingJs,
   testing,
-  testingJs,
+  decisionBoundary,
 };

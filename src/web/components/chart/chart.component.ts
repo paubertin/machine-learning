@@ -1,6 +1,6 @@
 import { Bounds, Drawing, Point, Sample, StylesWithImages } from '../../../common/interfaces';
 import { Graphics } from '../../graphics';
-import { math } from '../../math';
+import { math } from '../../../common/math';
 import { BaseComponent, Component } from '../../zen/component';
 import { Input, Ref } from '../../zen/decorators';
 
@@ -10,7 +10,9 @@ export interface ChartOptions {
   styles: StylesWithImages;
   transparency?: number;
   icon: string;
+  background?: HTMLImageElement;
 }
+
 @Component({
   selector: 'chart-component',
   templateUrl: 'components/chart/chart.component.html',
@@ -38,6 +40,7 @@ export class ChartComponent extends BaseComponent {
   public dynamicCtx!: CanvasRenderingContext2D;
 
   private drawingDynamic: boolean = false;
+  private _displaySamples: boolean = false;
 
   private get _transparency() {
     return this.options.transparency ?? 1;
@@ -98,7 +101,7 @@ export class ChartComponent extends BaseComponent {
     this._addEventListeners();
   }
 
-  public reset () {
+  public reset() {
     this._dataTrans = {
       offset: [0, 0],
       scale: 1
@@ -109,7 +112,7 @@ export class ChartComponent extends BaseComponent {
       offset: [0, 0],
       dragging: false
     };
-    
+
     this._updateDataBounds(
       this._dataTrans.offset,
       this._dataTrans.scale
@@ -121,8 +124,11 @@ export class ChartComponent extends BaseComponent {
   private _createCanvas() {
     this.canvas = document.createElement('canvas');
     this.ctx = this.canvas.getContext('2d')!;
+    this.ctx.imageSmoothingEnabled = false;
+    this.canvas.style.imageRendering = 'pixelated';
     this.dynamicCanvas = document.createElement('canvas');
     this.dynamicCtx = this.dynamicCanvas.getContext('2d')!;
+    this.dynamicCtx.imageSmoothingEnabled = false;
     this.dynamicCanvas.style.position = 'absolute';
     this.canvas.style.position = 'absolute';
     this.chartContainer.appendChild(this.canvas);
@@ -140,7 +146,7 @@ export class ChartComponent extends BaseComponent {
   public showDynamicPoint(point: Point, label: keyof typeof Drawing, nearestSamples: Required<Sample>[]) {
     if (!this.drawingDynamic) {
       this.drawingDynamic = true;
-      this.options.transparency = 0.1;
+      this.options.transparency! /= 2;
       this._draw();
     }
     const isSameAsBefore = math.equals(point, this._dynamicPoint?.point);
@@ -155,7 +161,7 @@ export class ChartComponent extends BaseComponent {
     this._dynamicPoint = undefined;
     this.drawingDynamic = false;
     this._nearestSamples = undefined;
-    this.options.transparency = 0.7;
+    this.options.transparency! *= 2;
     this._draw();
     this._drawDynamicPoint();
   }
@@ -331,8 +337,6 @@ export class ChartComponent extends BaseComponent {
     const maxX = Math.max(...x);
     const minY = Math.min(...y);
     const maxY = Math.max(...y);
-    const deltaX = maxX - minX;
-    const deltaY = maxY - minY;
     const bounds = {
       left: minX,
       right: maxX,
@@ -346,22 +350,39 @@ export class ChartComponent extends BaseComponent {
     const { ctx: ctx, canvas: canvas } = this;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    ctx.globalAlpha = this._transparency;
-    this._drawSamples(ctx, this.samples);
-    ctx.globalAlpha = 1;
-
-    if (this._hoveredSample) {
-      this._emphasizeSample(
-        ctx,
-        this._hoveredSample
+    if (this.options.background) {
+      const topLeft = math.remapPoint(
+        this._dataBounds,
+        this._pixelBounds,
+        [0, 1],
       );
+
+      const size = (canvas.width - this._margin * 2) / (this._dataTrans.scale ** 2);
+
+      ctx.globalAlpha = this._transparency;
+      ctx.drawImage(this.options.background, ...topLeft, size, size);
+      ctx.globalAlpha = 1;
     }
 
-    if (this._selectedSample) {
-      this._emphasizeSample(
-        ctx,
-        this._selectedSample, 'yellow'
-      );
+    if (this._displaySamples) {
+
+      ctx.globalAlpha = this._transparency;
+      this._drawSamples(ctx, this.samples);
+      ctx.globalAlpha = 1;
+
+      if (this._hoveredSample) {
+        this._emphasizeSample(
+          ctx,
+          this._hoveredSample
+        );
+      }
+
+      if (this._selectedSample) {
+        this._emphasizeSample(
+          ctx,
+          this._selectedSample, 'yellow'
+        );
+      }
     }
 
     this._drawAxes(ctx, canvas);
@@ -377,15 +398,22 @@ export class ChartComponent extends BaseComponent {
         this._pixelBounds,
         this._dynamicPoint.point,
       );
-      this._nearestSamples?.forEach((sample) => {
-        ctx.beginPath();
-        ctx.moveTo(...pixelLoc);
-        ctx.lineTo(...math.remapPoint(this._dataBounds, this._pixelBounds, sample.point as Point));
-        ctx.stroke();
-      });
+      if (this._displaySamples) {
+        this._nearestSamples?.forEach((sample) => {
+          ctx.beginPath();
+          ctx.moveTo(...pixelLoc);
+          ctx.lineTo(...math.remapPoint(this._dataBounds, this._pixelBounds, sample.point as Point));
+          ctx.stroke();
+        });
+      }
       Graphics.drawImage(ctx, this._styles[this._dynamicPoint.label].image, pixelLoc);
     }
 
+  }
+
+  public toggleSamples() {
+    this._displaySamples = !this._displaySamples;
+    this._draw();
   }
 
   selectSample(sample?: Required<Sample>) {

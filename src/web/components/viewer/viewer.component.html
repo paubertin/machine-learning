@@ -1,12 +1,13 @@
 <div id="controlPanel">
   <button (click)="this.toggleInput()">Toggle input</button>
+  <button (click)="this.toggleOutput()">Toggle output</button>
   <button (click)="this.scrollToTop()">Scroll to top</button>
   <button (click)="this.scrollToBottom()">Scroll to bottom</button>
-  <div>
+  <div class="stats">
     <b>Accuracy</b>
     <br>
     <!--{{this.correctCount}} / {{this.totalCount}} ({{this.utils.formatPercent(this.correctCount / this.totalCount)}})-->
-    <span>{{Number(this.correctCount / this.totalCount).toFixed(5)}} ({{this.Utils.formatPercent(this.correctCount / this.totalCount)}})</span>
+    <span>{{this.correctCount}} / {{this.totalCount}} ({{this.Utils.formatPercent(this.correctCount / this.totalCount)}})</span>
   </div>
 </div>
 <sketchpad-component
@@ -20,4 +21,11 @@
   [clickchart]="{{this.handleClick}}"
   [samples]="{{this.trainingSamples}}">
 </chart-component>
+<confusion-component
+  id="confusion"
+  [options]="{{this.confusionOptions}}"
+  [samples]="{{this.testingSamples}}"
+  [classes]="this.Utils.classes"
+  >
+</confusion-component>
 <div id="container"></div>
