@@ -52,3 +52,7 @@ export interface ChartOptions {
 
 export type Styles = Record<keyof typeof Drawing, { color: string; text: string; image?: HTMLImageElement }>;
 export type StylesWithImages = Record<keyof typeof Drawing, { color: string; text: string; image: HTMLImageElement }>;
+
+export interface Classifier {
+  predict: (input: number[]) => { label: keyof typeof Drawing, nearestSamples?: Sample[] };
+}

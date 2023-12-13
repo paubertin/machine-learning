@@ -16,7 +16,10 @@ const featuresTs = tsObjects + '/features.ts';
 const trainingTs = tsObjects + '/training.ts';
 const testingTs = tsObjects + '/testing.ts';
 const minMaxTs = tsObjects + '/minMax.ts';
-const decisionBoundary = datasetDir + '/decision_boundary.png';
+const modelTs = tsObjects + '/model.ts';
+const modelsDir = dataDir + '/models';
+const decisionBoundary = modelsDir + '/decision_boundary.png';
+const model = modelsDir + '/model.json';
 
 export const CONSTANTS = {
   canvasWidth,
@@ -37,4 +40,6 @@ export const CONSTANTS = {
   training,
   testing,
   decisionBoundary,
+  model,
+  modelTs,
 };

@@ -33,11 +33,11 @@ export class ChartComponent extends BaseComponent {
 
   public canvas!: HTMLCanvasElement;
 
-  public dynamicCanvas!: HTMLCanvasElement;
+  public overlayCanvas!: HTMLCanvasElement;
 
   public ctx!: CanvasRenderingContext2D;
 
-  public dynamicCtx!: CanvasRenderingContext2D;
+  public overlayCtx!: CanvasRenderingContext2D;
 
   private drawingDynamic: boolean = false;
   private _displaySamples: boolean = false;
@@ -126,21 +126,21 @@ export class ChartComponent extends BaseComponent {
     this.ctx = this.canvas.getContext('2d')!;
     this.ctx.imageSmoothingEnabled = false;
     this.canvas.style.imageRendering = 'pixelated';
-    this.dynamicCanvas = document.createElement('canvas');
-    this.dynamicCtx = this.dynamicCanvas.getContext('2d')!;
-    this.dynamicCtx.imageSmoothingEnabled = false;
-    this.dynamicCanvas.style.position = 'absolute';
+    this.overlayCanvas = document.createElement('canvas');
+    this.overlayCtx = this.overlayCanvas.getContext('2d')!;
+    this.overlayCtx.imageSmoothingEnabled = false;
+    this.overlayCanvas.style.position = 'absolute';
     this.canvas.style.position = 'absolute';
     this.chartContainer.appendChild(this.canvas);
-    this.chartContainer.appendChild(this.dynamicCanvas);
+    this.chartContainer.appendChild(this.overlayCanvas);
     this.chartContainer.style.width = `${this.options?.size ?? 200}px`;
     this.chartContainer.style.height = `${this.options?.size ?? 200}px`;
     this.canvas.width = this.options?.size ?? 200;
     this.canvas.height = this.options?.size ?? 200;
-    this.dynamicCanvas.width = this.options?.size ?? 200;
-    this.dynamicCanvas.height = this.options?.size ?? 200;
+    this.overlayCanvas.width = this.options?.size ?? 200;
+    this.overlayCanvas.height = this.options?.size ?? 200;
     this.canvas.style.backgroundColor = '#ffffff';
-    this.dynamicCanvas.style.backgroundColor = '#ffffff00';
+    this.overlayCanvas.style.backgroundColor = '#ffffff00';
   }
 
   public showDynamicPoint(point: Point, label: keyof typeof Drawing, nearestSamples: Required<Sample>[]) {
@@ -167,7 +167,7 @@ export class ChartComponent extends BaseComponent {
   }
 
   _addEventListeners() {
-    const { dynamicCanvas: canvas } = this;
+    const { overlayCanvas: canvas } = this;
     canvas.onmousedown = (evt) => {
       const dataLoc = this._getMouse(evt, true);
       this._dragInfo.start = dataLoc;
@@ -389,7 +389,7 @@ export class ChartComponent extends BaseComponent {
   }
 
   private _drawDynamicPoint() {
-    const { dynamicCtx: ctx, dynamicCanvas: canvas } = this;
+    const { overlayCtx: ctx, overlayCanvas: canvas } = this;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     if (this._dynamicPoint) {

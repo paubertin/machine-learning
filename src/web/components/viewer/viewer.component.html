@@ -28,4 +28,10 @@
   [classes]="this.Utils.classes"
   >
 </confusion-component>
+<visualizer-component
+  id="visualizer"
+  [network]="this.neuralNetwork"
+  [outputLabels]="Object.values(this.Utils.styles).map((s) => s.image)"
+  >  
+</visualizer-component>
 <div id="container"></div>

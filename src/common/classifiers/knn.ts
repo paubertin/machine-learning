@@ -1,7 +1,7 @@
-import { Drawing, Point, Sample } from "../interfaces";
+import { Classifier, Drawing, Point, Sample } from "../interfaces";
 import { math } from "../math";
 
-export class KNN {
+export class KNN implements Classifier {
   public constructor (public samples: Sample[], public k: number) {}
 
   public predict (point: number[]) {

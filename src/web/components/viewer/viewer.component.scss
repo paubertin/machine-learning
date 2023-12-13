@@ -73,6 +73,15 @@ button:disabled:hover {
   transform: translate(0, -50%);
 }
 
+#visualizer {
+  position: fixed;
+  background-color: white;
+  margin: 10px;
+  right: 0;
+  top: 50%;
+  transform: translate(0, -50%);
+}
+
 .emphasize {
   background-color: yellow!important;
 }

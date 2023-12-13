@@ -10,12 +10,14 @@ async function extract() {
 
   const samples: Required<Sample>[] = JSON.parse((await fs.readFile(CONSTANTS.samplesFile)).toString());
 
-  for (const sample of samples) {
+  for (let i = 0; i < samples.length; ++i) {
+    const sample = samples[i];
     const paths: Path[] = JSON.parse((await fs.readFile(path.join(CONSTANTS.jsonDir, `${sample.id}.json`))).toString());
 
     const functions = Features.inUse.map((f) => f.function);
 
     sample.point = functions.map((f) => f(paths));
+    Utils.printProgress(i, samples.length - 1);
   }
 
   const featureNames = Features.inUse.map((f) => f.name);

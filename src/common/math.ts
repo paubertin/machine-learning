@@ -51,6 +51,7 @@ const scale = (p: Point, scaler: number): Point => {
 
 const distance = (p1: Array<number>, p2: Array<number>) => {
   if (p1.length !== p2.length) {
+    console.error(p1, p2);
     throw new Error('Incompatible dimensions');
   }
   let sqDist = 0;

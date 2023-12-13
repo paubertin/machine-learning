@@ -13,6 +13,7 @@ import { ChartComponent, ChartOptions } from "../chart/chart.component";
 import { SketchPad } from "../sketchpad/sketchpad.component";
 import { KNN } from "../../../common/classifiers/knn";
 import { Confusion, ConfusionOptions } from "../confusion/confusion.component";
+import { NeuralNetwork } from "../../../common/network";
 
 
 @Component({
@@ -41,6 +42,8 @@ export class ViewerComponent extends BaseComponent {
   public Utils = Utils;
 
   public knn: KNN;
+
+  public neuralNetwork: NeuralNetwork = new NeuralNetwork([5, 5]);
 
   public chartOptions: ChartOptions;
 
