@@ -25,7 +25,7 @@ async function classification(options: Options): Promise<void> {
   }
   else {
     console.log(`Running classification with MLP...`);
-    model = new MLP([trainingSamples[0].point.length, Utils.classes.length], Utils.classes);
+    model = new MLP([trainingSamples[0].point.length, 10, Utils.classes.length], Utils.classes);
     
     if (existsSync(CONSTANTS.model)) {
       (model as MLP).load(JSON.parse((await readFile(CONSTANTS.model)).toString()));
@@ -51,7 +51,7 @@ async function classification(options: Options): Promise<void> {
 
   console.log('Generating decision boundary...');
 
-  const N = 100;
+  const N = 250;
   const canvas = createCanvas(N, N);
 
   const ctx = canvas.getContext('2d');

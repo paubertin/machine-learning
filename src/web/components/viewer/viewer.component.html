@@ -30,7 +30,7 @@
 </confusion-component>
 <visualizer-component
   id="visualizer"
-  [network]="this.neuralNetwork"
+  [network]="this.classifier.network"
   [outputLabels]="Object.values(this.Utils.styles).map((s) => s.image)"
   >  
 </visualizer-component>

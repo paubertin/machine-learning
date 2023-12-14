@@ -20,4 +20,8 @@ export class KNN implements Classifier {
       nearestSamples,
     };
   }
+
+  public load (json: any) {
+    throw new Error('Load not implemented for KNN');
+  }
 }

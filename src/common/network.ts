@@ -1,11 +1,6 @@
-export interface ILayer {
-  inputs: number[];
-  outputs: number[];
-  biases: number[];
-  weights: number[][];
-}
+import { ILayer, INeuralNetwork } from "./interfaces";
 
-export class Layer {
+export class Layer implements ILayer {
   public inputs: Array<number>;
   public outputs: Array<number>;
   public biases: Array<number>;
@@ -70,14 +65,16 @@ export class Layer {
   }
 }
 
-export class NeuralNetwork  {
+
+
+export class NeuralNetwork implements INeuralNetwork {
 
   public layers: Layer[];
 
-  public constructor (neuronCounts: number[] | Layer[]) {
+  public constructor (neuronCounts: number[]) {
     this.layers = [];
     for (let i = 0; i < neuronCounts.length - 1; ++i) {
-      this.layers.push(new Layer((neuronCounts as number[])[i], (neuronCounts as number[])[i + 1]));
+      this.layers.push(new Layer(neuronCounts[i], neuronCounts[i + 1]));
     }
   }
 

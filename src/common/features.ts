@@ -15,6 +15,9 @@ function getPointsCount (paths: Path[]) {
 
 function getWidth (paths: Path[]) {
   const points = paths.flat();
+  if (points.length === 0) {
+    return 0;
+  }
   const x = points.map((p) => p[0]);
   const min = Math.min(...x);
   const max = Math.max(...x);
@@ -23,6 +26,9 @@ function getWidth (paths: Path[]) {
 
 function getHeight (paths: Path[]) {
   const points = paths.flat();
+  if (points.length === 0) {
+    return 0;
+  }
   const y = points.map((p) => p[1]);
   const min = Math.min(...y);
   const max = Math.max(...y);
@@ -106,4 +112,5 @@ export const Features = {
   inUse,
   getElongation,
   getPixels,
+  getComplexity,
 }

@@ -1,5 +1,5 @@
 import { Features } from "../../../common/features";
-import { Path, Point, Sample, TestingSample } from "../../../common/interfaces";
+import { Classifier, Path, Point, Sample, TestingSample } from "../../../common/interfaces";
 import { features } from "../../../common/ts-objects/features";
 import { minMax } from "../../../common/ts-objects/minMax";
 import { testing } from "../../../common/ts-objects/testing";
@@ -14,6 +14,9 @@ import { SketchPad } from "../sketchpad/sketchpad.component";
 import { KNN } from "../../../common/classifiers/knn";
 import { Confusion, ConfusionOptions } from "../confusion/confusion.component";
 import { NeuralNetwork } from "../../../common/network";
+import { MLP } from "../../../common/classifiers/mlp";
+import { model } from "../../../common/ts-objects/model";
+import { Visualizer } from "../visualizer/visualizer.component";
 
 
 @Component({
@@ -37,11 +40,14 @@ export class ViewerComponent extends BaseComponent {
   @Ref('chart')
   public chart!: ChartComponent;
 
+  @Ref('visualizer')
+  public visualizer!: Visualizer;
+
   public handleClick = handleClick(this.shadow);
 
   public Utils = Utils;
 
-  public knn: KNN;
+  public classifier: Classifier;
 
   public neuralNetwork: NeuralNetwork = new NeuralNetwork([5, 5]);
 
@@ -59,7 +65,9 @@ export class ViewerComponent extends BaseComponent {
 
   public constructor () {
     super();
-    this.knn = new KNN(this.trainingSamples, 50);
+    // this.classifier = new KNN(this.trainingSamples, 50);
+    this.classifier = new MLP([], []);
+    this.classifier.load(model);
     const background = new Image();
     background.src='/decision_boundary.png';
 
@@ -79,7 +87,7 @@ export class ViewerComponent extends BaseComponent {
     for (const testSample of this.testingSamples) {
       testSample.truth = testSample.label;
       testSample.label = '?';
-      const { label } = this.knn.predict(testSample.point);
+      const { label } = this.classifier.predict(testSample.point);
       testSample.label = label;
       testSample.correct = testSample.label === testSample.truth;
       this.totalCount++;
@@ -109,9 +117,9 @@ export class ViewerComponent extends BaseComponent {
       component.style.cssText += 'outline: 10000px solid rgba(0,0,0,0.7);';
     });
 
-    this.confusion.afterInit((component) => {
-      component.style.display = 'none';
-    });
+    // this.confusion.afterInit((component) => {
+    //   component.style.display = 'none';
+    // });
   }
 
   public toggleInput () {
@@ -126,11 +134,16 @@ export class ViewerComponent extends BaseComponent {
   }
 
   public toggleOutput () {
-    if (this.confusion.style.display === 'none') {
-      this.confusion.style.display = 'block';
+    if (this.visualizer.style.display === '') {
+      this.visualizer.style.display = 'none';
+      this.confusion.style.display = '';
+    }
+    else if (this.confusion.style.display === '') {
+      this.confusion.style.display = 'none';
     }
     else {
-      this.confusion.style.display = 'none';
+      this.visualizer.style.display = '';
+      this.confusion.style.display = '';
     }
   }
 
@@ -138,7 +151,8 @@ export class ViewerComponent extends BaseComponent {
     const functions = Features.inUse.map((f) => f.function);
     const point = functions.map((f) => f(paths)) as Point;
     Utils.normalizePoints([ point ], minMax);
-    const { label, nearestSamples } = this.knn.predict(point);
+    const { label, nearestSamples } = this.classifier.predict(point);
+    this.visualizer.drawNetwork();
     this.predictedLabelContainer.innerHTML = `Is it a ${label} ?`;
     this.chart.showDynamicPoint(point, label, nearestSamples as any);
   }

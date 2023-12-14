@@ -29,8 +29,15 @@ export class Visualizer extends BaseComponent {
     this.canvas.height = 500;
     this.ctx = this.canvas.getContext('2d')!;
     this.canvas.style.position = 'absolute';
+    this.canvas.style.backgroundColor = '#363636';
     this.container.appendChild(this.canvas);
+    this.container.style.width = `${500}px`;
+    this.container.style.height = `${500}px`;
+    
+    this.drawNetwork();
+  }
 
+  public drawNetwork () {
     const margin = 50;
     const left = margin;
     const top = margin;
@@ -38,7 +45,6 @@ export class Visualizer extends BaseComponent {
     const height = this.ctx.canvas.height - margin * 2;
 
     const levelHeight = height / this.network.layers.length;
-
     this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
 
     for (let i = this.network.layers.length - 1; i >= 0; i--) {

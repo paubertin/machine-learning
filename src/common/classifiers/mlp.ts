@@ -1,4 +1,4 @@
-import { Classifier, Drawing, Sample } from "../interfaces";
+import { Classifier, Drawing, INeuralNetwork, Sample } from "../interfaces";
 import { NeuralNetwork } from "../network";
 
 export class MLP implements Classifier {
@@ -44,7 +44,7 @@ export class MLP implements Classifier {
     return correctCount / samples.length;
   }
 
-  public load (jsonModel: { neuronCounts: number[], classes: string[], network: NeuralNetwork }) {
+  public load (jsonModel: { neuronCounts: number[], classes: string[], network: INeuralNetwork }) {
     this.neuronCounts = jsonModel.neuronCounts;
     this.classes = jsonModel.classes;
     this.network = NeuralNetwork.from(jsonModel.network.layers);

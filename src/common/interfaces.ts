@@ -55,4 +55,16 @@ export type StylesWithImages = Record<keyof typeof Drawing, { color: string; tex
 
 export interface Classifier {
   predict: (input: number[]) => { label: keyof typeof Drawing, nearestSamples?: Sample[] };
+  load: (json: any) => void;
+}
+
+export interface ILayer {
+  inputs: number[];
+  outputs: number[];
+  biases: number[];
+  weights: number[][];
+}
+
+export interface INeuralNetwork {
+  layers: ILayer[];
 }
